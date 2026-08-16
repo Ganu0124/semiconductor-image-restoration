@@ -1,4 +1,4 @@
-const BASE = import.meta.env.VITE_API_URL || "/api";
+const BASE = "https://semiconductor-image-restoration-api.onrender.com/api";
 
 async function jsonFetch(url, opts) {
   const res = await fetch(url, opts);
