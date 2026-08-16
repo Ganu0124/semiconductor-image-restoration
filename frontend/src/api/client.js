@@ -1,10 +1,10 @@
-const BASE = "/api";
+const BASE = import.meta.env.VITE_API_URL || "/api";
 
 async function jsonFetch(url, opts) {
   const res = await fetch(url, opts);
   if (!res.ok) {
     let detail = res.statusText;
-    try { const j = await res.json(); detail = j.detail || detail; } catch (_) {}
+    try { const j = await res.json(); detail = j.detail || detail; } catch (_) { }
     throw new Error(detail);
   }
   return res.json();
