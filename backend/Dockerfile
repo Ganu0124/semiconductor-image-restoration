@@ -9,6 +9,7 @@ COPY ml/ ml/
 COPY backend/ backend/
 COPY configs/ configs/
 COPY data/ data/
+COPY models/ models/
 
 ENV PYTHONPATH=/app
 EXPOSE 8000
