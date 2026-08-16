@@ -38,7 +38,7 @@ export default function Sidebar() {
       </ul>
       <div className="sidebar-footer">
         v1.0.0 · Local dev instance<br />
-        Backend: <span className="mono">localhost:8000</span>
+        Backend: <span className="mono">Production API</span>
       </div>
     </aside>
   )
