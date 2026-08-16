@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+venv/
+.venv/
+.pytest_cache/
+
+# Node / frontend
+frontend/node_modules/
+frontend/dist/
+
+# Data / model artifacts (regenerable or large — do not commit)
+data/synthetic/
+data/dataset_report.json
+models/*/*.pth
+experiments/*.json
+reports/*.pdf
+backend/storage/
+backend/*.db
+
+# Env
+.env
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,72 @@
+# SEMI-VISION AI — central configuration
+# Nothing in the ML/backend code should hardcode these values; they are loaded
+# from this file (or overridden by environment variables, see .env.example).
+
+project:
+  name: "SEMI-VISION AI"
+  subtitle: "AI-Powered Semiconductor Image Restoration & Inspection"
+
+paths:
+  # NOTE: data.dataset_root currently points at the bundled SYNTHETIC placeholder
+  # dataset (data/synthetic). Replace with the path to the real KLA / semiconductor
+  # dataset once it is available, e.g. data/raw/<your_dataset>. Nothing else needs
+  # to change — the dataset analyzer and loader read structure dynamically.
+  dataset_root: "data/synthetic"
+  models_dir: "models"
+  experiments_dir: "experiments"
+  reports_dir: "reports"
+  database: "backend/semi_vision.db"
+
+dataset:
+  is_synthetic_placeholder: true   # set to false once a real dataset is supplied
+  paired: true                     # degraded/clean pairs available
+  splits: ["train", "val", "test"]
+  image_extensions: [".png", ".jpg", ".jpeg", ".tif", ".tiff"]
+
+degradation:
+  # Used only when generating/augmenting synthetic degraded images.
+  # Configurable — do not assume a fixed dimension.
+  noise_types: ["gaussian", "poisson", "sensor"]
+  gaussian_sigma_range: [5, 25]
+  poisson_scale: 30.0
+  sensor_read_noise_std: 3.0
+  downsample_scales: [2, 4]
+
+training:
+  dev_mode: true          # DEV_MODE=true -> tiny subset, tiny patches, few epochs
+  patch_size: 64
+  dev_patch_size: 32
+  batch_size: 8
+  dev_batch_size: 4
+  epochs: 60
+  dev_epochs: 3
+  learning_rate: 0.0002
+  lr_scheduler: "cosine"
+  early_stopping_patience: 10
+  val_every_n_epochs: 1
+  num_workers: 2
+  seed: 42
+  device: "auto"           # auto | cpu | cuda
+
+models:
+  available: ["unet", "swinir"]
+  default: "unet"
+  unet:
+    base_channels: 32
+    depth: 4
+  swinir:
+    # SwinIR is registered as a selectable model but is heavier than this
+    # CPU-only dev environment can train to convergence; see docs/training.md
+    # for how to train it once a GPU is available.
+    embed_dim: 60
+    window_size: 8
+    depths: [4, 4, 4, 4]
+
+evaluation:
+  metrics: ["psnr", "ssim", "lpips", "mae", "mse"]
+  lpips_net: "alex"
+
+api:
+  host: "0.0.0.0"
+  port: 8000
+  cors_origins: ["http://localhost:5173", "http://127.0.0.1:5173"]
