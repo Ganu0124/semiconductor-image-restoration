@@ -1,4 +1,20 @@
-const BASE = "https://semiconductor-image-restoration-api.onrender.com/api";
+export const BASE = "https://semiconductor-image-restoration-api.onrender.com/api";
+
+export const resolveApiUrl = (path) => {
+  if (!path) return null;
+
+  // Already an absolute URL
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    return path;
+  }
+
+  // Backend returns paths beginning with /api
+  if (path.startsWith("/api")) {
+    return `https://semiconductor-image-restoration-api.onrender.com${path}`;
+  }
+
+  return `${BASE}/${path.replace(/^\/+/, "")}`;
+};
 
 async function jsonFetch(url, opts) {
   const res = await fetch(url, opts);

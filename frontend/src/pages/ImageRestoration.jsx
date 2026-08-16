@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { api } from '../api/client.js'
+import { api, resolveApiUrl } from '../api/client.js'
 import CompareSlider from '../components/CompareSlider.jsx'
 import { UploadCloud, Download, Loader2 } from 'lucide-react'
 
@@ -16,8 +16,8 @@ export default function ImageRestoration() {
   const fileInputRef = useRef(null)
 
   useEffect(() => {
-    api.models().then(setModels).catch(() => {})
-    api.datasetGallery('test', 8).then((r) => setTrainImages(r.images || [])).catch(() => {})
+    api.models().then(setModels).catch(() => { })
+    api.datasetGallery('test', 8).then((r) => setTrainImages(r.images || [])).catch(() => { })
   }, [])
 
   const onFileSelected = (f) => {
@@ -28,13 +28,27 @@ export default function ImageRestoration() {
   }
 
   const pickFromDataset = async (img) => {
-    const res = await fetch(img.degraded_path)
-    const blob = await res.blob()
-    const f = new File([blob], img.filename, { type: 'image/png' })
-    setFile(f)
-    setGalleryPick(img)
-    setPreviewUrl(img.degraded_path)
-    setResult(null)
+    try {
+      const imageUrl = resolveApiUrl(img.degraded_path)
+
+      const res = await fetch(imageUrl)
+
+      if (!res.ok) {
+        throw new Error(`Could not load dataset image: ${res.status}`)
+      }
+
+      const blob = await res.blob()
+      const f = new File([blob], img.filename, {
+        type: blob.type || 'image/png'
+      })
+
+      setFile(f)
+      setGalleryPick(img)
+      setPreviewUrl(imageUrl)
+      setResult(null)
+    } catch (e) {
+      setError(e.message)
+    }
   }
 
   const runRestoration = async () => {
@@ -89,7 +103,7 @@ export default function ImageRestoration() {
             {trainImages.map((img) => (
               <div key={img.filename} className="gallery-item" onClick={() => pickFromDataset(img)}
                 style={{ borderColor: galleryPick?.filename === img.filename ? 'var(--accent-cyan)' : undefined }}>
-                <img src={img.degraded_path} alt={img.filename} />
+                <img src={resolveApiUrl(img.degraded_path)} alt={img.filename} />
               </div>
             ))}
           </div>
@@ -130,13 +144,16 @@ export default function ImageRestoration() {
                 <span className="badge">device: {result.device}</span>
               </div>
 
-              <CompareSlider beforeSrc={result.input_image_url} afterSrc={result.restored_image_url} />
+              <CompareSlider
+                beforeSrc={resolveApiUrl(result.input_image_url)}
+                afterSrc={resolveApiUrl(result.restored_image_url)}
+              />
 
               {result.ground_truth_image_url && (
                 <div className="image-triplet" style={{ marginTop: 16 }}>
-                  <figure><img src={result.input_image_url} /><figcaption>Degraded</figcaption></figure>
-                  <figure><img src={result.restored_image_url} /><figcaption>Restored</figcaption></figure>
-                  <figure><img src={result.ground_truth_image_url} /><figcaption>Ground Truth</figcaption></figure>
+                  <figure><img src={resolveApiUrl(result.input_image_url)} /><figcaption>Degraded</figcaption></figure>
+                  <figure><img src={resolveApiUrl(result.restored_image_url)} /><figcaption>Restored</figcaption></figure>
+                  <figure><img src={resolveApiUrl(result.ground_truth_image_url)} /><figcaption>Ground Truth</figcaption></figure>
                 </div>
               )}
 
@@ -147,7 +164,7 @@ export default function ImageRestoration() {
                 <MetricInline label="Inference Time" value={result.inference_time_seconds} unit=" s" precision={3} />
               </div>
 
-              <a className="btn" style={{ marginTop: 16 }} href={result.restored_image_url} download>
+              <a className="btn" style={{ marginTop: 16 }} href={resolveApiUrl(result.restored_image_url)} download>
                 <Download size={14} /> Download Restored Image
               </a>
             </>
