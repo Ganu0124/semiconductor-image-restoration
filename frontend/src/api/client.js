@@ -2,7 +2,7 @@
 // Local development: Vite proxy forwards /api -> http://localhost:8000/api
 // Production: requests go directly to the Render backend.
 
-const API_HOST = import.meta.env.VITE_API_URL || "";
+const API_HOST = import.meta.env.VITE_API_URL || "/api";
 
 export const BASE = `${API_HOST}/api`;
 
