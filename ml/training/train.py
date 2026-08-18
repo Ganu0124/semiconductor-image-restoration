@@ -1,7 +1,7 @@
 """Training pipeline for restoration models (U-Net / SwinIR-Lite).
 
 Supports:
-  - dataset loading & batching (ml/datasets/paired_dataset.py)
+  - dataset loading & batching (ml/datasets/ — npy or image-backed)
   - train/val loops with L1 loss
   - cosine LR scheduling
   - checkpointing (best + last) under models/<name>/
@@ -28,7 +28,8 @@ import torch
 from torch.utils.data import DataLoader
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from ml.datasets.paired_dataset import PairedRestorationDataset  # noqa: E402
+from ml.datasets.paired_dataset import PairedRestorationDataset          # noqa: E402
+from ml.datasets.npy_paired_dataset import NpyPairedRestorationDataset  # noqa: E402
 from ml.evaluation.metrics import psnr, ssim  # noqa: E402
 from ml.models.registry import build_model, checkpoint_path  # noqa: E402
 from ml.utils.config import get_device, load_config, resolve_path  # noqa: E402
@@ -39,25 +40,33 @@ def _bool(v: str) -> bool:
 
 
 def build_dataloaders(cfg: dict, dev_mode: bool):
-    dataset_root = resolve_path(cfg["paths"]["dataset_root"])
-    extensions = cfg["dataset"]["image_extensions"]
-    patch_size = cfg["training"]["dev_patch_size"] if dev_mode else cfg["training"]["patch_size"]
-    batch_size = cfg["training"]["dev_batch_size"] if dev_mode else cfg["training"]["batch_size"]
+    dataset_root  = resolve_path(cfg["paths"]["dataset_root"])
+    dataset_fmt   = cfg["dataset"].get("format", "image")       # "npy" or "image"
+    patch_size    = cfg["training"]["dev_patch_size"] if dev_mode else cfg["training"]["patch_size"]
+    batch_size    = cfg["training"]["dev_batch_size"]  if dev_mode else cfg["training"]["batch_size"]
 
-    train_ds = PairedRestorationDataset(dataset_root, "train", extensions, patch_size=patch_size)
-    val_ds = PairedRestorationDataset(dataset_root, "val", extensions, patch_size=patch_size, augment=False)
+    if dataset_fmt == "npy":
+        scale_factor = cfg["dataset"].get("scale_factor", 2)
+        train_ds = NpyPairedRestorationDataset(
+            dataset_root, "train", patch_size=patch_size, scale_factor=scale_factor
+        )
+        val_ds = NpyPairedRestorationDataset(
+            dataset_root, "val", patch_size=patch_size, scale_factor=scale_factor, augment=False
+        )
+    else:
+        extensions = cfg["dataset"]["image_extensions"]
+        train_ds = PairedRestorationDataset(dataset_root, "train", extensions, patch_size=patch_size)
+        val_ds   = PairedRestorationDataset(dataset_root, "val",   extensions, patch_size=patch_size, augment=False)
 
     if dev_mode:
-        # Small dataset subset per requirement #7
-        subset_n = min(len(train_ds), 16)
-        train_ds.filenames = train_ds.filenames[:subset_n]
-        val_subset_n = min(len(val_ds), 8)
-        val_ds.filenames = val_ds.filenames[:val_subset_n]
+        # Small dataset subset for fast local iteration
+        train_ds.filenames = train_ds.filenames[:min(len(train_ds), 16)]
+        val_ds.filenames   = val_ds.filenames[:min(len(val_ds), 8)]
 
     train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True,
                                num_workers=0 if dev_mode else cfg["training"]["num_workers"])
-    val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False,
-                             num_workers=0 if dev_mode else cfg["training"]["num_workers"])
+    val_loader   = DataLoader(val_ds,   batch_size=batch_size, shuffle=False,
+                               num_workers=0 if dev_mode else cfg["training"]["num_workers"])
     return train_loader, val_loader
 
 

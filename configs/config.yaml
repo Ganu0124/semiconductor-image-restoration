@@ -7,21 +7,23 @@ project:
   subtitle: "AI-Powered Semiconductor Image Restoration & Inspection"
 
 paths:
-  # NOTE: data.dataset_root currently points at the bundled SYNTHETIC placeholder
-  # dataset (data/synthetic). Replace with the path to the real KLA / semiconductor
-  # dataset once it is available, e.g. data/raw/<your_dataset>. Nothing else needs
-  # to change — the dataset analyzer and loader read structure dynamically.
-  dataset_root: "data/synthetic"
+  # Points at the real semiconductor dataset prepared by scripts/prepare_real_dataset.py.
+  # Layout: data/real/{train,val,test}/{clean,degraded}/*.npy
+  # To revert to the synthetic placeholder, set this back to "data/synthetic"
+  # and restore dataset.format: "image" and dataset.is_synthetic_placeholder: true.
+  dataset_root: "data/real"
   models_dir: "models"
   experiments_dir: "experiments"
   reports_dir: "reports"
   database: "backend/semi_vision.db"
 
 dataset:
-  is_synthetic_placeholder: true   # set to false once a real dataset is supplied
+  is_synthetic_placeholder: false  # real semiconductor dataset
+  format: "npy"                    # "npy" for .npy arrays | "image" for PNG/JPG/TIF
+  scale_factor: 2                  # GT is 2x NoisyLR (256x256 vs 128x128)
   paired: true                     # degraded/clean pairs available
   splits: ["train", "val", "test"]
-  image_extensions: [".png", ".jpg", ".jpeg", ".tif", ".tiff"]
+  image_extensions: [".png", ".jpg", ".jpeg", ".tif", ".tiff"]  # used when format=image
 
 degradation:
   # Used only when generating/augmenting synthetic degraded images.
@@ -34,8 +36,8 @@ degradation:
 
 training:
   dev_mode: true          # DEV_MODE=true -> tiny subset, tiny patches, few epochs
-  patch_size: 64
-  dev_patch_size: 32
+  patch_size: 128         # GT patch size (matches GT 256x256; LR is 64x64 before upsample)
+  dev_patch_size: 64
   batch_size: 8
   dev_batch_size: 4
   epochs: 60

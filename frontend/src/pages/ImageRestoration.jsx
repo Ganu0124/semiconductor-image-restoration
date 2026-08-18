@@ -27,42 +27,38 @@ export default function ImageRestoration() {
     setResult(null)
   }
 
-  const pickFromDataset = async (img) => {
-    try {
-      const imageUrl = resolveApiUrl(img.degraded_path)
+  const pickFromDataset = (img) => {
+    const imageUrl = resolveApiUrl(img.degraded_path)
 
-      const res = await fetch(imageUrl)
-
-      if (!res.ok) {
-        throw new Error(`Could not load dataset image: ${res.status}`)
-      }
-
-      const blob = await res.blob()
-      const f = new File([blob], img.filename, {
-        type: blob.type || 'image/png'
-      })
-
-      setFile(f)
-      setGalleryPick(img)
-      setPreviewUrl(imageUrl)
-      setResult(null)
-    } catch (e) {
-      setError(e.message)
-    }
+    setFile(null)
+    setGalleryPick(img)
+    setPreviewUrl(imageUrl)
+    setResult(null)
+    setError(null)
   }
 
   const runRestoration = async () => {
-    if (!file) return
+    if (!file && !galleryPick) return
+
     setLoading(true)
     setError(null)
+
     try {
       const fd = new FormData()
-      fd.append('file', file)
+
+      if (file) {
+        fd.append('file', file)
+      }
+
       fd.append('model', selectedModel)
+
       if (galleryPick) {
         fd.append('ground_truth_split', 'test')
         fd.append('ground_truth_filename', galleryPick.filename)
+        fd.append('input_split', 'test')
+        fd.append('input_filename', galleryPick.filename)
       }
+
       const res = await api.restore(fd)
       setResult(res)
     } catch (e) {
@@ -121,7 +117,7 @@ export default function ImageRestoration() {
           </div>
 
           <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}
-            disabled={!file || loading} onClick={runRestoration}>
+            disabled={(!file && !galleryPick) || loading} onClick={runRestoration}>
             {loading ? <Loader2 size={15} className="spin" /> : null}
             {loading ? 'Restoring…' : '3 · Restore Image'}
           </button>

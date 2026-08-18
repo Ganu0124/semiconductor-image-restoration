@@ -1,16 +1,21 @@
-export const BASE = "https://semiconductor-image-restoration-api.onrender.com/api";
+// In dev the Vite proxy (vite.config.js) forwards /api → http://localhost:8000.
+// In production the frontend is served from the same origin as the API,
+// so relative /api paths resolve correctly without any hardcoded host.
+export const BASE = "/api";
 
 export const resolveApiUrl = (path) => {
   if (!path) return null;
 
-  // Already an absolute URL
+  // Already an absolute URL — keep as-is
   if (path.startsWith("http://") || path.startsWith("https://")) {
     return path;
   }
 
-  // Backend returns paths beginning with /api
-  if (path.startsWith("/api")) {
-    return `https://semiconductor-image-restoration-api.onrender.com${path}`;
+  // Backend returns paths like /api/storage/... or /api/dataset/image/...
+  // These are already relative — return them as-is so the browser resolves
+  // them against the current origin (proxy in dev, real host in prod).
+  if (path.startsWith("/api") || path.startsWith("/storage")) {
+    return path;
   }
 
   return `${BASE}/${path.replace(/^\/+/, "")}`;

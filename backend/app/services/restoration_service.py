@@ -31,12 +31,32 @@ def save_upload(file_bytes: bytes, original_filename: str) -> Path:
     return path
 
 
+def _load_as_uint8(path: Path) -> np.ndarray:
+    """Load grayscale image as uint8 (H, W). Handles both PIL images and .npy arrays."""
+    path = Path(path)
+    if path.suffix.lower() == ".npy":
+        arr = np.load(path).astype(np.float32)
+        arr = np.clip(arr, 0.0, 1.0)
+        return (arr * 255.0).astype(np.uint8)
+    return np.array(Image.open(path).convert("L"))
+
+
+def _load_as_float32(path: Path) -> np.ndarray:
+    """Load grayscale image as float32 [0, 1]. Handles both PIL images and .npy arrays."""
+    path = Path(path)
+    if path.suffix.lower() == ".npy":
+        arr = np.load(path).astype(np.float32)
+        return np.clip(arr, 0.0, 1.0)
+    return np.array(Image.open(path).convert("L")).astype(np.float32) / 255.0
+
+
 def run_restoration(image_path: Path, model_name: str, ground_truth_path: Optional[Path] = None) -> dict:
     """Runs the REAL inference pipeline (ml/inference/inference.py) and, if a
     ground-truth image is supplied, computes REAL metrics (ml/evaluation/metrics.py).
     Nothing here fabricates numbers: metrics are None unless a ground truth exists.
+    Supports both PIL-readable images (.png/.jpg/.tif) and .npy arrays.
     """
-    img = np.array(Image.open(image_path).convert("L"))
+    img = _load_as_uint8(image_path)
     result = restore_image(img, model_name, cfg)
 
     uid = uuid.uuid4().hex[:12]
@@ -45,7 +65,7 @@ def run_restoration(image_path: Path, model_name: str, ground_truth_path: Option
 
     metrics = {"psnr": None, "ssim": None, "lpips": None, "mae": None, "mse": None}
     if ground_truth_path is not None and Path(ground_truth_path).exists():
-        gt = np.array(Image.open(ground_truth_path).convert("L")).astype(np.float32) / 255.0
+        gt = _load_as_float32(ground_truth_path)
         # resize restored/gt if mismatched (shouldn't happen for paired dataset)
         if gt.shape == result["restored_float"].shape:
             metrics = compute_all_metrics(gt, result["restored_float"], lpips_net=cfg["evaluation"]["lpips_net"])

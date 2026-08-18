@@ -101,8 +101,14 @@ async def restore(
     # Read image dimensions
     # ---------------------------------------------------------
     try:
-        with Image.open(input_path) as im:
-            w, h = im.size
+        if Path(input_path).suffix.lower() == ".npy":
+            import numpy as _np
+            arr = _np.load(input_path)
+            # arr shape is (H, W) — width=W, height=H
+            h, w = arr.shape[0], arr.shape[1]
+        else:
+            with Image.open(input_path) as im:
+                w, h = im.size
     except Exception as e:
         raise HTTPException(
             status_code=400,
