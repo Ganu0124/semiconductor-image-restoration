@@ -9,12 +9,7 @@ DATASET_DIR = Path("data/real")
 
 
 def main():
-    token = os.getenv("HF_TOKEN")
-
-    if not token:
-        raise RuntimeError(
-            "HF_TOKEN environment variable is not set."
-        )
+    
 
     DATASET_DIR.mkdir(parents=True, exist_ok=True)
 
