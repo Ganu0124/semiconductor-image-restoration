@@ -25,11 +25,10 @@ def main():
     print(f"Destination: {DATASET_DIR.resolve()}")
 
     snapshot_download(
-        repo_id=REPO_ID,
-        repo_type="dataset",
-        local_dir=str(DATASET_DIR),
-        token=token,
-    )
+    repo_id=REPO_ID,
+    repo_type="dataset",
+    local_dir=str(DATASET_DIR),
+)
 
     print("========================================")
     print("Dataset download completed")
