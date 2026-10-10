@@ -1,5 +1,4 @@
-# SEMI-VISION AI
-### AI-Powered Semiconductor Image Restoration & Inspection
+
 
 A complete, working, end-to-end system: dataset analysis → configurable degradation
 → deep-learning restoration (U-Net baseline + SwinIR-style advanced model) → real
