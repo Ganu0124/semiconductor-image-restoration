@@ -1,15 +1,6 @@
 
 
-A compl
 
-> ⚠️ **No real semiconductor dataset was supplied when this project was built.**
-> Every ML/backend/dashboard component runs against a **synthetic placeholder
-> dataset** (`data/synthetic/`, procedurally generated die/via/grid patterns —
-> see `ml/datasets/generate_synthetic_dataset.py`) purely so the full pipeline is
-> exercised with real code and real, computed metrics — nothing is faked. Swap in
-> your real dataset by pointing `paths.dataset_root` in `configs/config.yaml` (or
-> the `DATASET_ROOT` env var) at it; nothing else needs to change. See
-> [`docs/dataset.md`](docs/dataset.md).
 
 ---
 
