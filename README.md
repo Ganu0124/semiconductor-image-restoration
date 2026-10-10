@@ -1,9 +1,6 @@
 
 
-A complete, working, end-to-end system: dataset analysis → configurable degradation
-→ deep-learning restoration (U-Net baseline + SwinIR-style advanced model) → real
-PSNR/SSIM/LPIPS/MAE/MSE evaluation → FastAPI backend with SQLite → React dashboard →
-PDF inspection reports.
+A compl
 
 > ⚠️ **No real semiconductor dataset was supplied when this project was built.**
 > Every ML/backend/dashboard component runs against a **synthetic placeholder
