@@ -1,6 +1,3 @@
-ganutwsg hgh
-kojkjh
-
 <div align="center">
 
   <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=120&section=header&text=SEMI-VISION%20AI&fontSize=40&fontColor=fff&animation=fadeIn&fontAlignY=35" width="100%" />
